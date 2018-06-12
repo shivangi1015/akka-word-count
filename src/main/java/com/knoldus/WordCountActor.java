@@ -1,6 +1,8 @@
 package com.knoldus;
 
 import akka.actor.AbstractActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,16 +13,18 @@ import java.io.UnsupportedEncodingException;
 
 public class WordCountActor extends AbstractActor {
     
+    LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private static int counter = 0;
     private BufferedReader bufferedReader;
     
     public Receive createReceive() {
         return receiveBuilder()
-                .match(String.class, l -> wordCount())
+                .match(String.class, message -> wordCount())
+                .matchAny(o -> logger.info("received unknown message"))
                 .build();
     }
     
-    private int wordCount() throws IOException {
+    private void wordCount() throws IOException {
         
         bufferedReader = readFile();
         String line;
@@ -28,8 +32,7 @@ public class WordCountActor extends AbstractActor {
             String[] words = line.split(" ");
             counter = words.length + counter;
         }
-        System.out.println(counter);
-        return counter;
+        logger.info("Number of words in file are: " + counter);
     }
     
     private BufferedReader readFile() throws UnsupportedEncodingException {
